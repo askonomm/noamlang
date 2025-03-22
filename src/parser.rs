@@ -1,6 +1,6 @@
 use crate::lexer::Token;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Expression {
     StringLiteral(String),
     IntegerLiteral(i64),
@@ -20,7 +20,7 @@ pub enum Expression {
     },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Statement {
     Expression(Expression),
     FunctionDeclaration {
@@ -35,10 +35,10 @@ pub enum Statement {
     Comment(String),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Parameter {
-    name: String,
-    type_name: String,
+    pub name: String,
+    pub type_name: String,
 }
 
 #[derive(Debug)]
@@ -216,13 +216,21 @@ impl Parser {
     fn parse_expression(&mut self) -> Result<Expression, String> {
         let expr = self.parse_primary_expression()?;
         
-        // Check for binary operations like '='
+        // Check for binary operations like 'is' and 'is not'
         if self.check(&Token::Equals) {
-            self.advance(); // Consume the '=' token
+            self.advance(); // Consume the 'is' token
             let right = self.parse_primary_expression()?;
             return Ok(Expression::BinaryOperation {
                 left: Box::new(expr),
-                operator: "=".to_string(),
+                operator: "is".to_string(),
+                right: Box::new(right),
+            });
+        } else if self.check(&Token::NotEquals) {
+            self.advance(); // Consume the 'is not' token
+            let right = self.parse_primary_expression()?;
+            return Ok(Expression::BinaryOperation {
+                left: Box::new(expr),
+                operator: "is not".to_string(),
                 right: Box::new(right),
             });
         }

@@ -22,7 +22,8 @@ pub enum Token {
     RightBrace,       // }
     LeftParen,        // (
     RightParen,       // )
-    Equals,           // =
+    Equals,           // is
+    NotEquals,        // is not
     Colon,            // :
     Comma,            // ,
 
@@ -219,9 +220,50 @@ impl<'a> Lexer<'a> {
                 Token::RightParen
             },
 
-            Some('=') => {
-                self.advance();
-                Token::Equals
+            Some('i') => {
+                self.advance(); // consume 'i'
+                
+                // Check if it's "is"
+                if self.current_char == Some('s') {
+                    self.advance(); // consume 's'
+                    
+                    // Check if it's "is not"
+                    if self.current_char == Some(' ') {
+                        self.advance(); // consume space
+                        
+                        // Try to match "not"
+                        if self.current_char == Some('n') {
+                            self.advance(); // consume 'n'
+                            
+                            if self.current_char == Some('o') {
+                                self.advance(); // consume 'o'
+                                
+                                if self.current_char == Some('t') {
+                                    self.advance(); // consume 't'
+                                    return Token::NotEquals;
+                                }
+                            }
+                        }
+                    }
+                    
+                    return Token::Equals;
+                }
+                
+                // If it's not "is" or "is not", treat 'i' as an identifier
+                let mut identifier = String::from("i");
+                while let Some(c) = self.current_char {
+                    if c.is_alphanumeric() || c == '_' {
+                        identifier.push(c);
+                        self.advance();
+                    } else {
+                        break;
+                    }
+                }
+                
+                match identifier.as_str() {
+                    "if" => Token::If,
+                    _ => Token::Identifier(identifier),
+                }
             },
             
             Some(':') => {

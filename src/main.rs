@@ -1,21 +1,35 @@
 mod lexer;
 mod parser;
+mod interpreter;
+mod typechecker;
 
 use crate::lexer::Lexer;
 use crate::parser::Parser;
+use crate::interpreter::Interpreter;
+use crate::typechecker::TypeChecker;
 
 fn main() {
     let input = r#"
-        func print(arg: Unknown, arg2: String) {
-            // do something here
+        // Define a custom function to greet someone
+        func greet(name: String) {
+            print(String[Hello], name)
         }
 
-        print(String[Hello])
-        print(Integer[123123])
+        // Call our custom function
+        greet(String[World])
 
-        if function(String[Hello]) = String[Hello] {
-            print(String[Hello])
+        // Test conditional execution with "is" operator
+        if String[Hello] is String[Hello] {
+            print(String[True])
         }
+
+        // Test conditional execution with "is not" operator
+        if String[Hello] is not String[Goodbye] {
+            print(String[Different])
+        }
+
+        // Use the built-in function
+        print(String[Answer], Integer[42])
     "#;
 
     let mut lexer = Lexer::new(input);
@@ -29,7 +43,24 @@ fn main() {
     println!("\nParsing AST:");
     let mut parser = Parser::new(tokens);
     match parser.parse() {
-        Ok(ast) => println!("{:#?}", ast),
+        Ok(ast) => {
+            println!("{:#?}", ast);
+            
+            println!("\nType checking program:");
+            let mut type_checker = TypeChecker::new();
+            match type_checker.check_program(&ast) {
+                Ok(_) => {
+                    println!("Type checking successful");
+                    println!("\nInterpreting program:");
+                    let mut interpreter = Interpreter::new();
+                    match interpreter.interpret(ast) {
+                        Ok(_) => println!("Program executed successfully"),
+                        Err(e) => println!("Runtime error: {}", e),
+                    }
+                },
+                Err(e) => println!("Type error: {}", e),
+            }
+        },
         Err(e) => println!("Parsing error: {}", e),
     }
 }
